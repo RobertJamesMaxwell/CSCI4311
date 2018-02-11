@@ -80,6 +80,11 @@ public class DataSender extends Thread {
                 currentPacketRate++;
               }//end while
 
+              //Send a signal to client that the process is over
+              buf = new byte[8];
+              packet = new DatagramPacket(buf, buf.length, address, port);
+              socket.send(packet);
+
           } catch (IOException e) {
             e.printStackTrace();
           } finally {
