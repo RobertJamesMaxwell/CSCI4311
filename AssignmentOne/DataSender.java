@@ -8,7 +8,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class DataSender extends Thread {
+public class DataSender {
 
     public static void main(String[] args) throws Exception {
 
