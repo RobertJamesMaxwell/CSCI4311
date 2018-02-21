@@ -43,29 +43,22 @@ public class DataReceiver {
       //read first two packets to establish the rate
       //first packet
       int numberOfReadBytes = byteInFromServer.read(buf, 0, buf.length);
-        //System.out.println("First numberOfReadBytes:" + numberOfReadBytes);
       long timeOfPacketReceived = System.currentTimeMillis();
-        //System.out.println("First timeOfPacketReceived:" + timeOfPacketReceived);
       long currentPacketRateStartTime = System.currentTimeMillis();
-        //System.out.println("First currentPacketRateStartTime:" + currentPacketRateStartTime);
       long timeOfPreviousPacket = timeOfPacketReceived;
-        //System.out.println("First timeOfPreviousPacket:" + timeOfPreviousPacket);
 
       //second packet
       numberOfReadBytes = byteInFromServer.read(buf, 0, buf.length);
       timeOfPacketReceived = System.currentTimeMillis();
-        //System.out.println("Second timeOfPacketReceived:" + timeOfPacketReceived);
       long timeBetweenPackets = timeOfPacketReceived - timeOfPreviousPacket;
-        //System.out.println("Second timeBetweenPackets:" + timeBetweenPackets);
       long timeBetweenPreviousPackets = timeBetweenPackets;
-        //System.out.println("Second timeBetweenPreviousPackets:" + timeBetweenPreviousPackets);
       timeOfPreviousPacket = timeOfPacketReceived;
-        //System.out.println("Second timeOfPreviousPacket:" + timeOfPreviousPacket);
 
       System.out.println("Receiving packets...");
       boolean newPacketRate = false;
       long currentPacketRateEndTime = 0;
       int numberOfPacketsReceived = 2;
+      int packetRateNumber = 1;
 
       while(true) {
 
@@ -74,18 +67,13 @@ public class DataReceiver {
 
         //calculate packet rates
         timeOfPacketReceived = System.currentTimeMillis();
-          //System.out.println("\n\n timeOfPacketReceived:" + timeOfPacketReceived);
         timeBetweenPackets = timeOfPacketReceived - timeOfPreviousPacket;
-          //System.out.println(" timeBetweenPackets:" + timeBetweenPackets);
-          //System.out.println("Time between packets: " + timeBetweenPackets);
         timeOfPreviousPacket = timeOfPacketReceived;
-          //System.out.println(" timeOfPreviousPacket:" + timeOfPreviousPacket);
 
         //allow for error of 10ms in calculation
         if ( (Math.abs(timeBetweenPackets - timeBetweenPreviousPackets) > 10) ) {
           newPacketRate = true;
         }
-          //System.out.println(" timeBetweenPreviousPackets:" + timeBetweenPreviousPackets);
         timeBetweenPreviousPackets = timeBetweenPackets;
 
 
@@ -100,18 +88,18 @@ public class DataReceiver {
           System.out.println("\n\n-----------------------------------------");
           currentPacketRateEndTime = System.currentTimeMillis();
           System.out.println("PACKET RATE HAS CHANGED");
-          System.out.println("Previous packet rate was: \n" +
+          System.out.println("Previous packet rate was: " +
             numberOfPacketsReceived + " packets received in " +
                   (double)(currentPacketRateEndTime - currentPacketRateStartTime) / 1000 + " seconds." );
-          System.out.println("Packet Rate = " + ((double)numberOfPacketsReceived / ((double)(currentPacketRateEndTime - currentPacketRateStartTime) / 1000) ) + " packets per second.");
+          System.out.println("Packet Rate " + packetRateNumber + " = "
+                  + ((double)numberOfPacketsReceived / ((double)(currentPacketRateEndTime - currentPacketRateStartTime) / 1000) ) + " packets per second.");
           currentPacketRateStartTime = currentPacketRateEndTime;
           numberOfPacketsReceived = 0;
           newPacketRate = false;
 
-          //System.out.println("\n\n-----------------------------------------");
-          System.out.println("Bytes read from Server: " + numberOfReadBytes);
-          System.out.println("Buffer received is:" + Arrays.toString(buf));
           //convert bytes read back into ints to make sure we got the correct data
+          System.out.println("Bytes read from Server: " + numberOfReadBytes);
+          System.out.println("Buffer received is:\n" + Arrays.toString(buf));
           List<Integer> data = new ArrayList<Integer>();
           for (int i=0; i < 64 ; i+=4) {
             ByteBuffer bb = ByteBuffer.wrap(buf);
@@ -119,15 +107,17 @@ public class DataReceiver {
             int x = bb.getInt(i);
             data.add(x);
           }
-          System.out.println("Data received is: " + data.toString() + "\n");
+          System.out.println("Data received is: " + data.toString());
+          System.out.println("-----------------------------------------\n\n");
 
-          //exit loop if received a packet of 1 bytes (1 byte is signal from server that process is over)
+          //exit loop if received a packet of 1 bytes (1 empty byte is signal from server that process is over)
           if (numberOfReadBytes == 1) {
             System.out.println("Done receiving.");
             System.out.println("Goodbye.");
             break;
           }
           System.out.println("Receiving packets...");
+          packetRateNumber++;
         }
 
         numberOfPacketsReceived++;
