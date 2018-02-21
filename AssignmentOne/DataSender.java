@@ -10,13 +10,15 @@ import java.util.*;
 
 public class DataSender {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+
 
       //error message to user about correct usage of DataSender
   		if (args.length < 3) {
-        System.out.println("Usage: java DataSender <port> <inverval> <packetRate1> ... <packetRateN>");
+        System.out.println("Usage: java DataSender <port> <inverval> <packetRate1> <packetRate2> ... <packetRateN>");
         return;
       }
+
 
       //get port, interval to send packets, and variable number of packet rates from command line
   		int port = Integer.parseInt(args[0]);
@@ -26,24 +28,42 @@ public class DataSender {
   			packetRates.add(Integer.parseInt(args[i]));
   		}
 
+
       //establish server running on port given as args[0]
-      ServerSocket serverSocket = new ServerSocket(port);
+      ServerSocket serverSocket = null;
+      try {
+        serverSocket = new ServerSocket(port);
+      } catch (IOException ioe) {
+        ioe.printStackTrace();
+      }
       System.out.println("\r\nRunning Server: " +
-        "\n Host=" + serverSocket.getInetAddress().getHostAddress() +
-        "\n Port=" + serverSocket.getLocalPort());
+        "\n Host=" + (serverSocket != null ? serverSocket.getInetAddress().getHostAddress() : null) +
+        "\n Port=" + (serverSocket != null ? serverSocket.getLocalPort() : 0));
+
 
       //get connection from a client
-      Socket client = serverSocket.accept();
+      Socket client = null;
+      try {
+        client = serverSocket != null ? serverSocket.accept() : null;
+      } catch (IOException ioe) {
+        ioe.printStackTrace();
+      }
       System.out.println("\r\nNew connection from: " +
-        "\n Host=" + client.getInetAddress().getHostAddress() +
-        "\n Port=" + client.getLocalPort());
+        "\n Host=" + (client != null ? client.getInetAddress().getHostAddress() : null) +
+        "\n Port=" + (client != null ? client.getLocalPort() : 0));
+
 
       //establish output stream to client
-      DataOutputStream outToClient = new DataOutputStream(client.getOutputStream());
       String welcomeMessageToClient = "Hello, thanks for connecting.\n"
-          + "Preparing data to send...";
-      outToClient.writeBytes(welcomeMessageToClient + '\n');
-      Thread.sleep(2000);
+              + "Preparing data to send...";
+      DataOutputStream outToClient = null;
+      try {
+        outToClient = new DataOutputStream(client != null ? client.getOutputStream() : null);
+        outToClient.writeBytes(welcomeMessageToClient + '\n');
+      } catch (IOException ioe) {
+        ioe.printStackTrace();
+      }
+
 
       //prep data to send
       int[] data = {43, 11, 14, 31, 13, 44, 55, 66, 77, 88, 99, 76, 54, 32, 1, 2};
@@ -54,6 +74,8 @@ public class DataSender {
         buf[i*4] = integer.byteValue();
       }
       System.out.println("\nBuffer to send is:\n" + Arrays.toString(buf) + "\n");
+      System.out.println("\nData to send is:\n" + Arrays.toString(data) + "\n");
+
 
       //send data for each packet rate
       int numberOfPacketRates = packetRates.size();
@@ -63,23 +85,38 @@ public class DataSender {
         System.out.println("Writing data at " + currentPacketRate + " packets per second for " + interval + " seconds...\n");
         for (int i = 0; i < interval; i++) 	{
           for (int j = 0; j < currentPacketRate; j++) {
-            outToClient.write(buf, 0, buf.length);
-            Thread.sleep(1000 / currentPacketRate);
+            try {
+              if (outToClient != null) {
+                outToClient.write(buf, 0, buf.length);
+              }
+              Thread.sleep(1000 / currentPacketRate);
+            } catch (IOException | InterruptedException ioe) {
+              ioe.printStackTrace();
+            }
+
           }
         }
         currentPacketRateIndex++;
       } //end while
 
+
       //send a signal to client that the process is over
-      //signal is two packets in quick succession to change the rate and then sleep for 1 second
-      //one packet of a different size to denote the 'last packet'
-      //outToClient.write(buf, 0, buf.length);
-      //outToClient.write(buf, 0, buf.length);
-      //Thread.sleep(1000);
-      buf = new byte[8];
-      outToClient.write(buf, 0, buf.length);
-      client.close();
-      serverSocket.close();
+      //one packet of a different size (size 1) to denote the 'last packet'
+      buf = new byte[1];
+      try {
+        if (outToClient != null) {
+          outToClient.write(buf, 0, buf.length);
+        }
+        if (client != null) {
+          client.close();
+        }
+        if (serverSocket != null) {
+          serverSocket.close();
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
       System.out.println("Goodbye.");
     }
 

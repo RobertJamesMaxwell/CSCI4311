@@ -1,6 +1,6 @@
 /*
  * Robert Maxwell
- * CSCI 4311 - Spirng 2018
+ * CSCI 4311 - Spring 2018
  * Assignment One
 */
 
@@ -15,16 +15,19 @@ public class DataReceiver {
 
     public static void main(String[] args) throws IOException {
 
+
       //error message to user about correct usage of DataSender
   		if (args.length != 3) {
         System.out.println("Usage: java DataReceiver <ipAddress> <port> <interval>");
         return;
       }
 
+
       //get IP address, port, and interval to accept packets from command line
       InetAddress address = InetAddress.getByName(args[0]);
   		int port = Integer.parseInt(args[1]);
   		int interval  = Integer.parseInt(args[2]);
+
 
       //establish connection to server
       Socket clientSocket = new Socket(address, port);
@@ -87,7 +90,7 @@ public class DataReceiver {
 
 
         //account for if server has stopped sending packetRates
-        if (numberOfReadBytes == 8) {
+        if (numberOfReadBytes == 1) {
           newPacketRate = true;
         }
 
@@ -99,8 +102,8 @@ public class DataReceiver {
           System.out.println("PACKET RATE HAS CHANGED");
           System.out.println("Previous packet rate was: \n" +
             numberOfPacketsReceived + " packets received in " +
-            (currentPacketRateEndTime - currentPacketRateStartTime) / 1000 + " seconds." );
-          System.out.println("Packet Rate = " + (numberOfPacketsReceived / ((currentPacketRateEndTime - currentPacketRateStartTime) / 1000) ) + " packets per second.");
+                  (double)(currentPacketRateEndTime - currentPacketRateStartTime) / 1000 + " seconds." );
+          System.out.println("Packet Rate = " + ((double)numberOfPacketsReceived / ((double)(currentPacketRateEndTime - currentPacketRateStartTime) / 1000) ) + " packets per second.");
           currentPacketRateStartTime = currentPacketRateEndTime;
           numberOfPacketsReceived = 0;
           newPacketRate = false;
@@ -118,8 +121,8 @@ public class DataReceiver {
           }
           System.out.println("Data received is: " + data.toString() + "\n");
 
-          //exit loop if received a packet of 8 bytes (8 bytes is signal from server that process is over)
-          if (numberOfReadBytes == 8) {
+          //exit loop if received a packet of 1 bytes (1 byte is signal from server that process is over)
+          if (numberOfReadBytes == 1) {
             System.out.println("Done receiving.");
             System.out.println("Goodbye.");
             break;
