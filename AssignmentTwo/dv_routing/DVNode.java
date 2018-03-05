@@ -7,5 +7,10 @@
 
 package dv_routing;
 
+import java.util.List;
+
 public class DVNode {
+
+    int nodeNum;
+    int[] dv;
 }

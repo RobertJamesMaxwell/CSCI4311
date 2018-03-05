@@ -29,6 +29,44 @@ public class DVCoordinator {
         readDataFromFile(inputAdjacencyList);
         System.out.println("\n\nAdjacencyList is: " + adjacencyList);
 
+        //set the DV nodes
+        List<DVNode> dvNodes = new ArrayList<>();
+        for (int i = 0; i < adjacencyList.size(); i++)  {
+            DVNode node = new DVNode();
+            node.nodeNum = i;
+            node.dv = new int[adjacencyList.size()];
+
+            //set the distance vectors from the list of neighbors
+            for (int j = 0; j < node.dv.length; j++)  {
+                for (HashMap<Integer, Integer> neighborDV: adjacencyList.get(i))    {
+                    if (i == j) {
+                        //set the distance vector to zero for your own nodeNum
+                        node.dv[i] = 0;
+                    } else if (neighborDV.get(j) == null )  {
+                        //if you don't have a neighbor at this index, set it to infinity
+                        node.dv[j] = Integer.MAX_VALUE;
+                    } else {
+                        //set your neighbors distance
+                        node.dv[j] = neighborDV.get(j);
+                        break;
+                    }
+                }
+            }
+            dvNodes.add(node);
+        }
+
+        System.out.println("\nYou have successfully created the following DV nodes.\n");
+        for (DVNode node : dvNodes) {
+
+            System.out.println("\n\nNode number: " + node.nodeNum);
+            System.out.println("With dv's: ");
+            for(int i: node.dv) {
+                System.out.print(i + " ");
+            }
+
+        }
+
+
     }
 
     private static void readDataFromFile(File inputAdjacencyList) {
