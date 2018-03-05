@@ -7,8 +7,8 @@
 
 package dv_routing;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.net.*;
 import java.util.*;
 
 public class DVCoordinator {
@@ -57,14 +57,54 @@ public class DVCoordinator {
 
         System.out.println("\nYou have successfully created the following DV nodes.\n");
         for (DVNode node : dvNodes) {
-
             System.out.println("\n\nNode number: " + node.nodeNum);
             System.out.println("With dv's: ");
             for(int i: node.dv) {
                 System.out.print(i + " ");
             }
-
         }
+        System.out.println("\n\n");
+
+
+        //Wait for a connection for each of DV Nodes in dvNodes list
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket(12110);
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        for(int i = 0; i < dvNodes.size(); i++) {
+            try {
+
+                // receive connection
+                byte[] buf = new byte[256];
+                DatagramPacket packet = new DatagramPacket(buf, buf.length);
+                socket.receive(packet);
+
+                // unpack packet and send welcome message
+                InetAddress nodeAddress = packet.getAddress();
+                System.out.println("\n\nIP of packet received is: " + nodeAddress);
+                int nodePort = packet.getPort();
+                String welcome = "Hello From the DV Coordinator!";
+                buf = welcome.getBytes();
+                packet = new DatagramPacket(buf, buf.length, nodeAddress, nodePort);
+                socket.send(packet);
+
+                // send packet with DV Node object
+                DVNode nodeToSendOverNetwork = dvNodes.get(i);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream(6400);
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(nodeToSendOverNetwork);
+                byte[] data = baos.toByteArray();
+                packet = new DatagramPacket(data, data.length, nodeAddress, nodePort);
+                socket.send(packet);
+
+
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        }
+
 
 
     }
