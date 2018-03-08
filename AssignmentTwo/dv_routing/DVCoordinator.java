@@ -71,7 +71,7 @@ public class DVCoordinator {
         //Wait for a connection for each of DV Nodes in dvNodes list
         DatagramSocket socket = null;
         try {
-            socket = new DatagramSocket(12110);
+            socket = new DatagramSocket(12100);
         } catch (SocketException e) {
             e.printStackTrace();
         }
