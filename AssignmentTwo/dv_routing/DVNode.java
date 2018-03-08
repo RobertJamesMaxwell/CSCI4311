@@ -11,6 +11,8 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DVNode implements Serializable {
 
@@ -45,6 +47,16 @@ public class DVNode implements Serializable {
             for(int i: nodeFromCoordinator.dv) {
                 System.out.print(i + " ");
             }
+
+            //receive neighbor nodes IP addresses from DVCoordinator
+            socket.receive(packet);
+            buf = packet.getData();
+            bais = new ByteArrayInputStream(buf);
+            ois = new ObjectInputStream(bais);
+            List<String> neighborNodesIPList =  (List<String>) ois.readObject();
+            System.out.println("\n\nReceived the following IP neighbor mapping from server!");
+            System.out.println(neighborNodesIPList);
+
 
             socket.close();
         } catch (IOException | ClassNotFoundException e) {

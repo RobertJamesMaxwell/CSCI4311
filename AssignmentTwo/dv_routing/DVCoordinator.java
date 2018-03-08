@@ -14,6 +14,8 @@ import java.util.*;
 public class DVCoordinator {
 
     public static List<List<HashMap<Integer, Integer>>> adjacencyList = new ArrayList<>();
+    public static HashMap<Integer, String> tableForDVNodeIPMapping = new HashMap<>();
+    public static HashMap<Integer, Integer> tableForDVNodePortMapping = new HashMap<>();
 
     public static void main(String[] args) {
 
@@ -90,6 +92,13 @@ public class DVCoordinator {
                 packet = new DatagramPacket(buf, buf.length, nodeAddress, nodePort);
                 socket.send(packet);
 
+                // store DVNode's IP address in IP table and Port in port table
+                tableForDVNodeIPMapping.put(i, nodeAddress.toString());
+                tableForDVNodePortMapping.put(i, nodePort);
+
+                System.out.println("IP Table: " + tableForDVNodeIPMapping);
+                System.out.println("Port Table: " + tableForDVNodePortMapping);
+
                 // send packet with DV Node object
                 DVNode nodeToSendOverNetwork = dvNodes.get(i);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream(6400);
@@ -104,6 +113,45 @@ public class DVCoordinator {
                 ioe.printStackTrace();
             }
         }
+
+
+        // send each DVNode it's neighbor IP Mappings
+        for(int i = 0; i < dvNodes.size(); i++) {
+            try {
+                byte[] buf = new byte[256];
+
+                // calculate neighbor IP List
+                List<String> neighborIPList = new ArrayList<>();
+                for (int j = 0; j < dvNodes.size(); j++)    {
+                    if(dvNodes.get(i).dv[j] == Integer.MAX_VALUE)   {
+                        // add blank string at index if that index is NOT a neighbor
+                        neighborIPList.add("");
+                    } else {
+                        neighborIPList.add(tableForDVNodeIPMapping.get(j));
+                    }
+                }
+
+
+                // send packet with neighbor IP table
+                ByteArrayOutputStream baos = new ByteArrayOutputStream(6400);
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(neighborIPList);
+                byte[] data = baos.toByteArray();
+                InetAddress currentNodeIP = InetAddress.getByName(tableForDVNodeIPMapping.get(i).replace("/", ""));
+                System.out.println("Current Node IP: "+ currentNodeIP);
+                int currentNodePort = tableForDVNodePortMapping.get(i);
+                System.out.println("Current Node Port: "+ currentNodePort);
+                DatagramPacket packet = new DatagramPacket(data, data.length, currentNodeIP, currentNodePort);
+                System.out.println("Sending the following IP Table to Node: " + i);
+                System.out.println(neighborIPList);
+                socket.send(packet);
+
+
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        }
+
 
 
 
