@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class FWNode {
@@ -13,8 +14,12 @@ public class FWNode {
     private static DataPlanePort dataPlanePort;
     private static List<PortUser> portUserList = new ArrayList<>();
     private DVNode dvNode;
+    private static List<HashMap<Integer, Integer>> entireForwardingTable = new ArrayList<>();
 
     public static void main(String[] args) {
+
+        //setup forwarding table
+        setupForwardingTable();
 
         try {
             // send connection request to coordinator
@@ -84,17 +89,36 @@ public class FWNode {
                 portUser.initialize();
             }
 
+            //get this node's forwarding table
+            HashMap<Integer, Integer> myForwardingTable = entireForwardingTable.get(nodeFromCoordinator.nodeNum);
+
+
             //listen for incoming connections
             while (true) {
                 System.out.println("Listening for a message...");
                 MessageType receivedMessage = dataPlanePort.receive();
                 int destinationNode = receivedMessage.getDestNode();
-                System.out.println("Recieved a new message for destination node: " + destinationNode);
+                System.out.println("Recieved a new message from source node: " + receivedMessage.getSourceNode() + " for destination node: " + destinationNode);
 
                 if (destinationNode == nodeFromCoordinator.nodeNum) {
                     System.out.println("WOOHOO! The packet got to where it needed to get!");
                 } else {
                     //forward packet according to forwarding table
+                    int nodeToForwardTo = myForwardingTable.get(destinationNode);
+                    System.out.println("Sending to next node: " + nodeToForwardTo + " a packet for destination node: " + destinationNode);
+                    byte[] pack = new byte[1024];
+                    Arrays.fill(pack, (byte)nodeFromCoordinator.nodeNum);
+                    MessageType msg = new MessageType(nodeFromCoordinator.nodeNum, destinationNode, pack);
+
+                    //find the correct portuser who is connected to the correct neighbor node
+                    for (PortUser portUser : portUserList) {
+                        if (portUser.nodeId == nodeToForwardTo) {
+                            System.out.println("This is the correct PortUser to forward to: " + portUser.nodeId);
+                            System.out.println("Forwarding to next node: " + nodeToForwardTo);
+                            portUser.send(msg);
+                        }
+                    }
+                    Thread.sleep(1000);
                 }
             }
 
@@ -110,5 +134,125 @@ public class FWNode {
             e.printStackTrace();
         }
 
+    }
+
+    private static void setupForwardingTable() {
+
+        //node 0
+        HashMap<Integer, Integer> nodeZero = new HashMap<Integer, Integer>();
+        nodeZero.put(0,0);
+        nodeZero.put(1,1);
+        nodeZero.put(2,3);
+        nodeZero.put(3,3);
+        nodeZero.put(4,3);
+        nodeZero.put(5,3);
+        nodeZero.put(6,3);
+        nodeZero.put(7,1);
+        nodeZero.put(8,8);
+        entireForwardingTable.add(nodeZero);
+
+        //node 1
+        HashMap<Integer, Integer> nodeOne = new HashMap<Integer, Integer>();
+        nodeOne.put(0,0);
+        nodeOne.put(1,1);
+        nodeOne.put(2,7);
+        nodeOne.put(3,0);
+        nodeOne.put(4,0);
+        nodeOne.put(5,7);
+        nodeOne.put(6,7);
+        nodeOne.put(7,7);
+        nodeOne.put(8,0);
+        entireForwardingTable.add(nodeOne);
+
+        //node 2
+        HashMap<Integer, Integer> nodeTwo = new HashMap<Integer, Integer>();
+        nodeTwo.put(0,3);
+        nodeTwo.put(1,7);
+        nodeTwo.put(2,2);
+        nodeTwo.put(3,3);
+        nodeTwo.put(4,3);
+        nodeTwo.put(5,5);
+        nodeTwo.put(6,5);
+        nodeTwo.put(7,7);
+        nodeTwo.put(8,3);
+        entireForwardingTable.add(nodeTwo);
+
+        //node 3
+        HashMap<Integer, Integer> nodeThree = new HashMap<Integer, Integer>();
+        nodeThree.put(0,0);
+        nodeThree.put(1,0);
+        nodeThree.put(2,2);
+        nodeThree.put(3,3);
+        nodeThree.put(4,4);
+        nodeThree.put(5,2);
+        nodeThree.put(6,2);
+        nodeThree.put(7,2);
+        nodeThree.put(8,0);
+        entireForwardingTable.add(nodeThree);
+
+        //node 4
+        HashMap<Integer, Integer> nodeFour = new HashMap<Integer, Integer>();
+        nodeFour.put(0,3);
+        nodeFour.put(1,3);
+        nodeFour.put(2,3);
+        nodeFour.put(3,3);
+        nodeFour.put(4,4);
+        nodeFour.put(5,3);
+        nodeFour.put(6,3);
+        nodeFour.put(7,3);
+        nodeFour.put(8,8);
+        entireForwardingTable.add(nodeFour);
+
+        //node 5
+        HashMap<Integer, Integer> nodeFive = new HashMap<Integer, Integer>();
+        nodeFive.put(0,2);
+        nodeFive.put(1,2);
+        nodeFive.put(2,2);
+        nodeFive.put(3,2);
+        nodeFive.put(4,2);
+        nodeFive.put(5,5);
+        nodeFive.put(6,6);
+        nodeFive.put(7,2);
+        nodeFive.put(8,2);
+        entireForwardingTable.add(nodeFive);
+
+        //node 6
+        HashMap<Integer, Integer> nodeSix = new HashMap<Integer, Integer>();
+        nodeSix.put(0,5);
+        nodeSix.put(1,5);
+        nodeSix.put(2,5);
+        nodeSix.put(3,5);
+        nodeSix.put(4,5);
+        nodeSix.put(5,5);
+        nodeSix.put(6,6);
+        nodeSix.put(7,5);
+        nodeSix.put(8,5);
+        entireForwardingTable.add(nodeSix);
+
+        //node 7
+        HashMap<Integer, Integer> nodeSeven = new HashMap<Integer, Integer>();
+        nodeSeven.put(0,1);
+        nodeSeven.put(1,1);
+        nodeSeven.put(2,2);
+        nodeSeven.put(3,2);
+        nodeSeven.put(4,2);
+        nodeSeven.put(5,2);
+        nodeSeven.put(6,2);
+        nodeSeven.put(7,7);
+        nodeSeven.put(8,1);
+        entireForwardingTable.add(nodeSeven);
+
+        //node 8
+        HashMap<Integer, Integer> nodeEight = new HashMap<Integer, Integer>();
+        nodeEight.put(0,0);
+        nodeEight.put(1,0);
+        nodeEight.put(2,0);
+        nodeEight.put(3,0);
+        nodeEight.put(4,0);
+        nodeEight.put(5,0);
+        nodeEight.put(6,0);
+        nodeEight.put(7,0);
+        nodeEight.put(8,8);
+        entireForwardingTable.add(nodeEight);
     }
 }

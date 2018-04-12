@@ -188,7 +188,7 @@ public class DVCoordinator {
             }
 
             //send random messages
-            for (int i = 0; i < 5; i++)    {
+            for (int i = 0; i < 2; i++)    {
 
                 //pick a random node as a source and destination
                 System.out.println("Sending message number: " + i);
