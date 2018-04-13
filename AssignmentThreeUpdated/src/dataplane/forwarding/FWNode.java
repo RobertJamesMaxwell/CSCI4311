@@ -95,7 +95,7 @@ public class FWNode {
 
             //listen for incoming connections
             while (true) {
-                System.out.println("Listening for a message...");
+                System.out.println("\nListening for a message...");
                 MessageType receivedMessage = dataPlanePort.receive();
                 int destinationNode = receivedMessage.getDestNode();
                 System.out.println("Recieved a new message from source node: " + receivedMessage.getSourceNode() + " for destination node: " + destinationNode);

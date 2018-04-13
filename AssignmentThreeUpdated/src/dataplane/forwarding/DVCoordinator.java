@@ -154,10 +154,6 @@ public class DVCoordinator {
                 oos = new ObjectOutputStream(baos);
                 oos.writeObject(neighborPortList);
                 data = baos.toByteArray();
-                //InetAddress currentNodeIP = InetAddress.getByName(tableForDVNodeIPMapping.get(i).replace("/", ""));
-                //System.out.println("Current Node IP: "+ currentNodeIP);
-                //int currentNodePort = tableForDVNodePortMapping.get(i);
-                //System.out.println("Current Node Port: "+ currentNodePort);
                 packet = new DatagramPacket(data, data.length, currentNodeIP, currentNodePort);
                 System.out.println("Sending the following Port Table to Node: " + i);
                 System.out.println(neighborPortList);
@@ -169,13 +165,12 @@ public class DVCoordinator {
             }
         }
 
-
-        System.out.println("\n-----------------------------------");
+        System.out.println("\n---------------------------------");
         System.out.println("-----------------------------------");
         System.out.println("-----------------------------------");
-        System.out.println("DVCoordinator will begin sending random packets in 20 seconds...");
+        System.out.println("DVCoordinator will connect to all nodes in 10 seconds...");
         try {
-            Thread.sleep(20000);
+            Thread.sleep(10000);
 
             //setup connection to all FWNodes
             List<PortUser> allNodesAsPortUsers = new ArrayList<>();
@@ -187,11 +182,14 @@ public class DVCoordinator {
                 allNodesAsPortUsers.add(nodeAsPortUser);
             }
 
+            System.out.println("\nDVCoordinator will begin sending random packets in 10 seconds...");
+            Thread.sleep(10000);
+
             //send random messages
-            for (int i = 0; i < 2; i++)    {
+            for (int i = 0; i < 1; i++)    {
 
                 //pick a random node as a source and destination
-                System.out.println("Sending message number: " + i);
+                System.out.println("\nSending message number: " + i);
                 int sourceNode = (int)Math.floor( Math.random() * (dvNodes.size()) );
                 int destinationNode = (int)Math.floor( Math.random() * (dvNodes.size()) );
 
@@ -205,9 +203,14 @@ public class DVCoordinator {
                 Thread.sleep(10000);
             }
 
-
+            //close all connections
+            for(PortUser portUser: allNodesAsPortUsers) {
+                portUser.close();
+            }
 
         } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

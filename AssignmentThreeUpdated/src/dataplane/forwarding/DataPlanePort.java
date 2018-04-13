@@ -66,11 +66,15 @@ public class DataPlanePort implements Runnable, Callback {
 		notifyAll(); 
 	} 
 	
-	public synchronized MessageType receive() throws InterruptedException{ 
-		while (que.isEmpty()) { 
+	public synchronized MessageType receive() throws InterruptedException{
+		System.out.println("Inside of DPP receive...");
+		while (que.isEmpty()) {
+			System.out.println("Que is empty...");
 			wait(); 
-		} 
-		MessageType msg = que.poll(); 
+		}
+		System.out.println("Before polling...");
+		MessageType msg = que.poll();
+		System.out.println("After polling...");
 		System.out.println("receive: " + msg.getDestNode());
 		return msg; 
 	} 
