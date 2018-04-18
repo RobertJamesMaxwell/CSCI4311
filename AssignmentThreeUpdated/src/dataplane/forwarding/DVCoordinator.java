@@ -205,12 +205,14 @@ public class DVCoordinator {
 
             //close all connections
             for(PortUser portUser: allNodesAsPortUsers) {
-                portUser.close();
+              //  portUser.close();
+            }
+            while(true) {
+                System.out.println("WAITING...");
+                Thread.sleep(10000);
             }
 
         } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
             e.printStackTrace();
         }
 
