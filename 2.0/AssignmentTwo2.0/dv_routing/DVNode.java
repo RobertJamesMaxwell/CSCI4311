@@ -20,14 +20,25 @@ public class DVNode implements Serializable {
     int nodeNum;
     int[] dv;
 
+    private static int coordinatorPortNumber;
+    private static int dvNodePortNumber;
+
     public static void main(String[] args)  {
+
+        //error message to user about correct usage of DVCoordinator
+        if (args.length != 2) {
+            System.out.println("Usage: java DVNode <ip address> <port number> ");
+            return;
+        }
 
         try {
             // send connection request to coordinator
             DatagramSocket socket = new DatagramSocket();
             byte[] buf = new byte[256];
-            InetAddress address = InetAddress.getByName("localhost");
-            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 12100);
+            InetAddress address = InetAddress.getByName(args[0]);
+            coordinatorPortNumber = Integer.parseInt(args[1]);
+            dvNodePortNumber = coordinatorPortNumber + 10;
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, coordinatorPortNumber);
             socket.send(packet);
 
             // get welcome message response
@@ -59,7 +70,7 @@ public class DVNode implements Serializable {
             System.out.println(neighborNodesIPList);
 
             // setup sending multicast to neighbors
-            int multicastSendPort = 12110 + nodeFromCoordinator.nodeNum;
+            int multicastSendPort = dvNodePortNumber + nodeFromCoordinator.nodeNum;
             System.out.println("\n\nMultiCast Sending Port for node " + nodeFromCoordinator.nodeNum + " is " + multicastSendPort);
             String multicastSendIP = "230.0.0." + nodeFromCoordinator.nodeNum;
             System.out.println("\n\nMultiCast IP for node " + nodeFromCoordinator.nodeNum + " is " + multicastSendIP);
@@ -79,9 +90,9 @@ public class DVNode implements Serializable {
                 if (neighborNodesIPList.get(i).equals(""))  {
 
                 } else {
-                    portsToListenOn.add(12110 + i);
+                    portsToListenOn.add(dvNodePortNumber + i);
                     ipsToListenOn.add("230.0.0." + Integer.toString(i));
-                    MulticastSocket listeningSocket = new MulticastSocket(12110 + i);
+                    MulticastSocket listeningSocket = new MulticastSocket(dvNodePortNumber + i);
                     listeningSocket.joinGroup(InetAddress.getByName("230.0.0." + Integer.toString(i)));
                     socketsForListening.add(listeningSocket);
                 }
