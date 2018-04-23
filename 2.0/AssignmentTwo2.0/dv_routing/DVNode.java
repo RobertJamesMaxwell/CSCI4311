@@ -45,7 +45,8 @@ public class DVNode implements Serializable {
             packet = new DatagramPacket(buf, buf.length);
             socket.receive(packet);
             String received = new String(packet.getData(), 0, packet.getLength());
-            System.out.println("From Server: " + received);
+            System.out.println("\nReceived the following message from the server: ");
+            System.out.println("'" + received + "'");
 
             //receive DVNode info from DVCoordinator
             socket.receive(packet);
@@ -53,9 +54,9 @@ public class DVNode implements Serializable {
             ByteArrayInputStream bais = new ByteArrayInputStream(buf);
             ObjectInputStream ois = new ObjectInputStream(bais);
             DVNode nodeFromCoordinator = (DVNode)ois.readObject();
-            System.out.println("Received DVNode from server!");
-            System.out.println("\n\nNode number: " + nodeFromCoordinator.nodeNum);
-            System.out.println("With dv's: ");
+            System.out.println("\n\nReceived my DV Node info from the server!");
+            System.out.println("My node number: " + nodeFromCoordinator.nodeNum);
+            System.out.print("My dv's: ");
             for(int i: nodeFromCoordinator.dv) {
                 System.out.print(i + " ");
             }
@@ -90,22 +91,19 @@ public class DVNode implements Serializable {
                 }
             }
             byte[] listenBuf = new byte[256];
+            DVReceiver dvReceiver = new DVReceiver();
+            dvReceiver.setSocketsForListening(socketsForListening);
 
             // Send and Receive data
             while(true) {
                 // send broadcast out to everyone listening
-                    System.out.println("\n\nBroadcasting data to neighbors...");
-                    String multiCastHelloMessage = "Hello from node " + nodeFromCoordinator.nodeNum;
-                    dvSender.send(multiCastHelloMessage);
-                    Thread.sleep(2000);
+                System.out.println("\n\nBroadcasting data to neighbors...");
+                String multiCastHelloMessage = "Hello from node " + nodeFromCoordinator.nodeNum;
+                dvSender.send(multiCastHelloMessage);
+                Thread.sleep(2000);
 
                 //receive broadcasts from neighbors
-                for(MulticastSocket currentListeningSocket: socketsForListening)    {
-                    DatagramPacket listeningPacket = new DatagramPacket(listenBuf, listenBuf.length);
-                    currentListeningSocket.receive(listeningPacket);
-                    String ReceivedFromNeighbor = new String(listeningPacket.getData(), 0, listeningPacket.getLength());
-                    System.out.println("Received data from a neighbor. Data is: " + ReceivedFromNeighbor);
-                }
+                dvReceiver.receive(listenBuf);
             }
 
         } catch (IOException | ClassNotFoundException e) {
