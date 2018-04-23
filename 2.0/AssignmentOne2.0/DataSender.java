@@ -108,7 +108,7 @@ public class DataSender {
 
       //send a signal to client that the process is over
       //one packet of a different size (size 1) to denote the 'last packet'
-      buf = new byte[1];
+      buf = new byte[4];
       try {
         if (outToClient != null) {
           outToClient.write(buf, 0, buf.length);
