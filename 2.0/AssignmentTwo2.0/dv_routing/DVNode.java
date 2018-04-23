@@ -69,29 +69,21 @@ public class DVNode implements Serializable {
             System.out.println("\n\nReceived the following IP neighbor mapping from server!");
             System.out.println(neighborNodesIPList);
 
-            // setup sending multicast to neighbors
+            // setup DV Sender
+            DVSender dvSender = new DVSender();
             int multicastSendPort = dvNodePortNumber + nodeFromCoordinator.nodeNum;
             System.out.println("\n\nMultiCast Sending Port for node " + nodeFromCoordinator.nodeNum + " is " + multicastSendPort);
+            dvSender.setMulticastPortNumber(multicastSendPort);
             String multicastSendIP = "230.0.0." + nodeFromCoordinator.nodeNum;
-            System.out.println("\n\nMultiCast IP for node " + nodeFromCoordinator.nodeNum + " is " + multicastSendIP);
-            MulticastSocket sendSocket = new MulticastSocket();
-            byte[] sendBuf = new byte[256];
-            String hello = "Hello from node " + nodeFromCoordinator.nodeNum;
-            sendBuf = hello.getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(sendBuf, sendBuf.length, InetAddress.getByName(multicastSendIP), multicastSendPort);
+            System.out.println("MultiCast IP for node " + nodeFromCoordinator.nodeNum + " is " + multicastSendIP);
+            dvSender.setMulticastIPNumber(multicastSendIP);
 
 
-            // setup receiving multicast from neighbors
-            List<Integer> portsToListenOn = new ArrayList<>();
-            List<String> ipsToListenOn = new ArrayList<>();
+            // setup DV Receiver
             List<MulticastSocket> socketsForListening = new ArrayList<>();
             for (int i = 0; i < neighborNodesIPList.size(); i++){
                 // if IP is empty at this index, then we don't need to listen to that neighbor
-                if (neighborNodesIPList.get(i).equals(""))  {
-
-                } else {
-                    portsToListenOn.add(dvNodePortNumber + i);
-                    ipsToListenOn.add("230.0.0." + Integer.toString(i));
+                if (!neighborNodesIPList.get(i).equals(""))  {
                     MulticastSocket listeningSocket = new MulticastSocket(dvNodePortNumber + i);
                     listeningSocket.joinGroup(InetAddress.getByName("230.0.0." + Integer.toString(i)));
                     socketsForListening.add(listeningSocket);
@@ -99,10 +91,12 @@ public class DVNode implements Serializable {
             }
             byte[] listenBuf = new byte[256];
 
+            // Send and Receive data
             while(true) {
                 // send broadcast out to everyone listening
-                    System.out.println("Sending Data...");
-                    sendSocket.send(sendPacket);
+                    System.out.println("\n\nBroadcasting data to neighbors...");
+                    String multiCastHelloMessage = "Hello from node " + nodeFromCoordinator.nodeNum;
+                    dvSender.send(multiCastHelloMessage);
                     Thread.sleep(2000);
 
                 //receive broadcasts from neighbors
@@ -110,7 +104,7 @@ public class DVNode implements Serializable {
                     DatagramPacket listeningPacket = new DatagramPacket(listenBuf, listenBuf.length);
                     currentListeningSocket.receive(listeningPacket);
                     String ReceivedFromNeighbor = new String(listeningPacket.getData(), 0, listeningPacket.getLength());
-                    System.out.println("From Neighbor: " + ReceivedFromNeighbor);
+                    System.out.println("Received data from a neighbor. Data is: " + ReceivedFromNeighbor);
                 }
             }
 
