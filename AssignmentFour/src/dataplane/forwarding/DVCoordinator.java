@@ -182,8 +182,8 @@ public class DVCoordinator {
                 allNodesAsPortUsers.add(nodeAsPortUser);
             }
 
-            System.out.println("\nDVCoordinator will begin sending random packets in five minutes...");
-            Thread.sleep(5 * 60 * 1000);
+            System.out.println("\nDVCoordinator will begin sending random packets in one minute...");
+            Thread.sleep( 60 * 1000);
 
             //send random messages
             for (int i = 0; i < 2; i++)    {

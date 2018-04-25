@@ -42,12 +42,16 @@ public class DVReceiver extends Thread {
         byte[] listenBuf = new byte[256];
         try {
             while(true) {
-             receivedDV = this.receive(listenBuf);
-             System.out.println("Inside RUN: DV is: " + receivedDV.node_num);
-             this.changeListener.changed();
-             ControlPlane.needToChange = true;
-             System.out.println("\nDVReceiver Thread is sleeping for 20 seconds.");
-             Thread.sleep(20000);
+                receivedDV = this.receive(listenBuf);
+                System.out.println("Inside RUN: DVs for this node are is: ");
+                for(int j: receivedDV.dv) {
+                    System.out.print(j + " ");
+                }
+                System.out.println();
+                this.changeListener.changed();
+                ControlPlane.needToChange = true;
+                System.out.println("\nDVReceiver Thread is sleeping for 12 ms.");
+                Thread.sleep(12);
             }
         } catch (IOException e) {
             e.printStackTrace();
