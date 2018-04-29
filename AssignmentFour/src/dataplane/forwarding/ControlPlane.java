@@ -17,8 +17,16 @@ public class ControlPlane implements ChangeListener {
     private static List<HashMap<Integer, Integer>> entireForwardingTable = new ArrayList<>();
     private static int dvNodePortNumber;
     public static boolean needToChange = false;
+    public static DVNode nodeFromCoordinator;
+    public static int numberOfReceives;
+    private static int numberOfPacketsForwarded;
+    private static long startTimeOfRate;
+    private static long endTimeOfRate;
+    private static List<String> neighborNodesIPList;
+    public static DVSender dvSender;
+    public static boolean needToSendToNeighbors = false;
 
-    private static HashMap<Integer, Integer> realForwardingTable = new HashMap<>();
+    public static HashMap<Integer, Integer> realForwardingTable = new HashMap<>();
 
     public static void main(String[] args) {
 
@@ -47,7 +55,7 @@ public class ControlPlane implements ChangeListener {
             buf = packet.getData();
             ByteArrayInputStream bais = new ByteArrayInputStream(buf);
             ObjectInputStream ois = new ObjectInputStream(bais);
-            DVNode nodeFromCoordinator = (DVNode) ois.readObject();
+            nodeFromCoordinator = (DVNode) ois.readObject();
             System.out.println("Received DVNode from server!");
             System.out.println("\n\nNode number: " + nodeFromCoordinator.nodeNum);
             System.out.println("With dv's: ");
@@ -60,7 +68,7 @@ public class ControlPlane implements ChangeListener {
             buf = packet.getData();
             bais = new ByteArrayInputStream(buf);
             ois = new ObjectInputStream(bais);
-            List<String> neighborNodesIPList = (List<String>) ois.readObject();
+            neighborNodesIPList = (List<String>) ois.readObject();
             System.out.println("\n\nReceived the following IP neighbor mapping from server!");
             System.out.println(neighborNodesIPList);
 
@@ -110,7 +118,7 @@ public class ControlPlane implements ChangeListener {
 
 
             // setup DV Sender
-            DVSender dvSender = new DVSender();
+            dvSender = new DVSender();
             int multicastSendPort = dvNodePortNumber + nodeFromCoordinator.nodeNum;
             System.out.println("\n\nMultiCast Sending Port for node " + nodeFromCoordinator.nodeNum + " is " + multicastSendPort);
             dvSender.setMulticastPortNumber(12345);  // must be the same as multicast receiver port!!!
@@ -142,52 +150,16 @@ public class ControlPlane implements ChangeListener {
 
 
             //send your DV Object to your neighbors so they can update their tables -- loop this
-            dvSender.send(dvToSendOverNetwork);
+            //dvSender.send(dvToSendOverNetwork);
 
             //if DV Receiver updates your own DV based on what it receives, re-update your DV and send it
-            int loopCount = 0;
-            while (loopCount < 1000)    {
+            int numberOfSends = 0;
+            while (realForwardingTable.containsValue(null))    {
                 //send your DV Object to your neighbors so they can update their tables -- loop this
-                System.out.println("Sending and sleeping for 10 ms");
+                    //System.out.println("Sending and sleeping for 1000 ms");
                 dvSender.send(dvToSendOverNetwork);
-                Thread.sleep(10);
-                if (needToChange)   {
-                    needToChange = false;
-                    System.out.println("CHAAANGE NUMBER " + loopCount);
-                    //update your forwarding table
-                    DV newDV = DVReceiver.receivedDV;
+                Thread.sleep(1000);
 
-                    //update your forwarding table
-                    for (int i = 0; i < realForwardingTable.size(); i++)    {
-                        if (nodeFromCoordinator.dv[newDV.node_num] + newDV.dv[i] < nodeFromCoordinator.dv[i]
-                                && nodeFromCoordinator.dv[i] != 0
-                                && newDV.dv[i] != 0
-                                //&& nodeFromCoordinator.dv[i] != Integer.MAX_VALUE
-                                && newDV.dv[i] != Integer.MAX_VALUE){
-
-                            realForwardingTable.put(i, newDV.node_num);
-
-                            System.out.println("\n\nMy DV is: ");
-                            for(int j: nodeFromCoordinator.dv) {
-                                System.out.print(j + " ");
-                            }
-
-                            System.out.println("\nDV I just received from node '" + newDV.node_num + "' is:");
-                            for(int j: newDV.dv) {
-                                System.out.print(j + " ");
-                            }
-
-                            //update nodeFromCoordinator.dv
-                            nodeFromCoordinator.dv[i] = newDV.dv[i] + nodeFromCoordinator.dv[newDV.node_num];
-                            System.out.println("\nMy NEW DV is: ");
-                            for(int j: nodeFromCoordinator.dv) {
-                                System.out.print(j + " ");
-                            }
-                            System.out.println();
-
-                        }
-                    }
-                    System.out.println("\nMy NEW Real Forwarding Table is: " + realForwardingTable);
 
 //                    System.out.println("Sleeping for 10 seconds");
 //                    Thread.sleep(10*1000);
@@ -207,15 +179,15 @@ public class ControlPlane implements ChangeListener {
 //                        break;
 //                    }
 
-                }
-                loopCount++;
+
+                numberOfSends++;
             } //end while
 
-
+            dvSender.send(dvToSendOverNetwork);
 //            System.out.println("SLEEPING FOREVER");
 //            Thread.sleep(100 * 60 * 1000);
 
-            dvReceiver.stop();
+            //dvReceiver.stop();
             System.out.println("========================================================");
             System.out.println("========================================================");
             System.out.println("========================================================");
@@ -227,6 +199,8 @@ public class ControlPlane implements ChangeListener {
             System.out.println("========================================================");
             System.out.println("========================================================");
             System.out.println("========================================================");
+            System.out.println("Number of sends needed: " + numberOfSends);
+            System.out.println("Number of receives needed: " + numberOfReceives);
             System.out.println("DV NETWORK IS SETUP!!!!");
             System.out.println("I am Node: " + nodeFromCoordinator.nodeNum);
             System.out.println("My DV's are:");
@@ -245,19 +219,24 @@ public class ControlPlane implements ChangeListener {
             //HashMap<Integer, Integer> myForwardingTable = entireForwardingTable.get(nodeFromCoordinator.nodeNum);
             HashMap<Integer, Integer> myForwardingTable = realForwardingTable;
 
+            numberOfPacketsForwarded = 0;
+            startTimeOfRate = System.currentTimeMillis();
+            needToSendToNeighbors = false;
             //listen for incoming connections
             while (true) {
-                System.out.println("\nListening for a message...");
+//                System.out.println("\nListening for a message...");
                 MessageType receivedMessage = dataPlanePort.receive();
                 int destinationNode = receivedMessage.getDestNode();
-                System.out.println("Recieved a new message from source node: " + receivedMessage.getSourceNode() + " for destination node: " + destinationNode);
+                //System.out.println("Recieved a new message from source node: " + receivedMessage.getSourceNode() + " for destination node: " + destinationNode);
 
                 if (destinationNode == nodeFromCoordinator.nodeNum) {
-                    System.out.println("WOOHOO! The packet got to where it needed to get!");
+                  //  System.out.println("WOOHOO! The packet got to where it needed to get!");
+                    //System.out.println();
                 } else {
                     //forward packet according to forwarding table
                     int nodeToForwardTo = myForwardingTable.get(destinationNode);
-                    System.out.println("Sending to next node: " + nodeToForwardTo + " a packet for destination node: " + destinationNode);
+                    //System.out.println("Sending to next node: " + nodeToForwardTo + " a packet for destination node: " + destinationNode);
+                    //System.out.println();
                     byte[] pack = new byte[1024];
                     Arrays.fill(pack, (byte)nodeFromCoordinator.nodeNum);
                     MessageType msg = new MessageType(nodeFromCoordinator.nodeNum, destinationNode, pack);
@@ -265,14 +244,19 @@ public class ControlPlane implements ChangeListener {
                     //find the correct portuser who is connected to the correct neighbor node
                     for (PortUser portUser : portUserList) {
                         if (portUser.nodeId == nodeToForwardTo) {
-                            System.out.println("This is the correct PortUser to forward to: " + portUser.nodeId);
-                            System.out.println("Forwarding to next node: " + nodeToForwardTo);
+//                            System.out.println("This is the correct PortUser to forward to: " + portUser.nodeId);
+//                            System.out.println("Forwarding to next node: " + nodeToForwardTo);
                             portUser.send(msg);
                         }
                     }
-                    Thread.sleep(1000);
+                    Thread.sleep(10);
 
                     //update your DV because cost has changeed?
+                    calculateRateAndUpdateDV();
+//                    if (needToSendToNeighbors) {
+//                        dvSender.send(dvToSendOverNetwork);
+//                        needToSendToNeighbors = false;
+//                    }
                     //if cost has changed enough, do DVSender.send
                 }
             }
@@ -288,6 +272,48 @@ public class ControlPlane implements ChangeListener {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+    }
+
+    private static void calculateRateAndUpdateDV() {
+
+        numberOfPacketsForwarded++;
+        endTimeOfRate = System.currentTimeMillis();
+        long endMinusStartInSeconds = (endTimeOfRate - startTimeOfRate) / 1000;
+        //System.out.println("Forwarded " + numberOfPacketsForwarded + " packets in " + endMinusStartInSeconds + " seconds." );
+
+        //calculate rate of last 10 seconds
+        if (endMinusStartInSeconds > 10) {
+            //System.out.println("UPDATE");
+            System.out.println("Forwarded " + numberOfPacketsForwarded + " packets in " + endMinusStartInSeconds + " seconds." );
+            double rate =  (double) numberOfPacketsForwarded / (double) endMinusStartInSeconds;
+            System.out.println("New rate is : " + rate);
+            //int newWeight = nodeFromCoordinator.dv[nodeFromCoordinator.nodeNum] * (int) (1 + Math.log(rate) * 0.5);
+
+            //if (newWeight != 0) {
+                // update weight to your neighbor if necessary and send it out
+                for (int i = 0; i < nodeFromCoordinator.dv.length; i++) {
+                    int newWeight = (int) Math.round(nodeFromCoordinator.dv[i] * rate);
+                    if (!neighborNodesIPList.get(i).equals("") && newWeight != 0)  {
+                        System.out.println("New weight is : " + newWeight);
+                        nodeFromCoordinator.dv[i] = newWeight;
+                        System.out.println("My updated DV's from RATE CHANGE are:");
+                        for(int j: nodeFromCoordinator.dv) {
+                            System.out.print(j + " ");
+                        }
+                        DV dvToSendOverNetwork = new DV(nodeFromCoordinator.nodeNum);
+                        dvToSendOverNetwork.setDv(nodeFromCoordinator.dv);
+                        dvSender.send(dvToSendOverNetwork);
+                    }
+                }
+            //}
+            numberOfPacketsForwarded = 0;
+            startTimeOfRate = System.currentTimeMillis();
+        }
+
+        // if rate of last 10 second is different that current DV, update DV and do a send
+
+
 
     }
 

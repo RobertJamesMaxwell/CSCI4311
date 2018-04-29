@@ -26,9 +26,9 @@ public class DataPlanePort implements Runnable, Callback {
 		ServerSocket serverSocket = null; 
 		try {
 			serverSocket = new ServerSocket(portNum); 
-          	System.out.println("server soc address:" + serverSocket.getInetAddress());
-            System.out.println("server local socket soc address:" + serverSocket.getLocalSocketAddress()); 
-            System.out.println("server soc port:" + serverSocket.getLocalPort()); 
+//          	System.out.println("server soc address:" + serverSocket.getInetAddress());
+//            System.out.println("server local socket soc address:" + serverSocket.getLocalSocketAddress());
+//            System.out.println("server soc port:" + serverSocket.getLocalPort());
         } catch (IOException ioe) { 
         	ioe.printStackTrace(); 
         } 
@@ -36,17 +36,17 @@ public class DataPlanePort implements Runnable, Callback {
 			int nodeNum = -1; 
        		try {
 				Socket clientSocket = serverSocket.accept(); 	    // not part of communication 
-	            System.out.println("client soc IP:" + clientSocket.getInetAddress()); 
-	            System.out.println("client soc port:" + clientSocket.getLocalPort());  
-	            System.out.println("client soc remote IP:" + clientSocket.getRemoteSocketAddress()); 
-	            System.out.println("client soc remote port:" + clientSocket.getPort());  
+//	            System.out.println("client soc IP:" + clientSocket.getInetAddress());
+//	            System.out.println("client soc port:" + clientSocket.getLocalPort());
+//	            System.out.println("client soc remote IP:" + clientSocket.getRemoteSocketAddress());
+//	            System.out.println("client soc remote port:" + clientSocket.getPort());
 				outs[j] = new DataOutputStream(clientSocket.getOutputStream()); 
 				DataInputStream in = new DataInputStream(clientSocket.getInputStream()); 
 				nodeNum = in.readInt(); 
 				neighbor2stream.put(nodeNum, j); 
 				listners[j] = new Listner(nodeNum, in, this); 
 			} catch (IOException ioe) { 
-				System.err.println("Failed in connection for j=" + j + "with " + nodeNum);
+//				System.err.println("Failed in connection for j=" + j + "with " + nodeNum);
 				ioe.printStackTrace(); 
 				System.exit(-1);
 			} 
@@ -67,15 +67,15 @@ public class DataPlanePort implements Runnable, Callback {
 	} 
 	
 	public synchronized MessageType receive() throws InterruptedException{
-		System.out.println("Inside of DPP receive...");
+		//System.out.println("Inside of DPP receive...");
 		while (que.isEmpty()) {
-			System.out.println("Que is empty...");
+			//System.out.println("Que is empty...");
 			wait(); 
 		}
-		System.out.println("Before polling...");
+		//System.out.println("Before polling...");
 		MessageType msg = que.poll();
-		System.out.println("After polling...");
-		System.out.println("receive: " + msg.getDestNode());
+//		System.out.println("After polling...");
+//		System.out.println("receive: " + msg.getDestNode());
 		return msg; 
 	} 
 	
@@ -131,7 +131,7 @@ class Listner extends Thread {
 		while (msgSize != -1) { 
 			try { 
 				msgSize = in.read(packet); 
-				System.out.println("Listner " + pId + ": " + msgSize + " bytes."); 
+				//System.out.println("Listner " + pId + ": " + msgSize + " bytes.");
 				MessageType msg = MessageType.bytearray2messagetype(packet); 				
 				requester.callback(msg); 
 			} catch (SocketException se) { 
@@ -141,7 +141,7 @@ class Listner extends Thread {
 				ioe.printStackTrace(); 
 			}
 		}  
-  		System.out.println("Listner " + pId + " is done." );
+  		//System.out.println("Listner " + pId + " is done." );
 	}
 }
 

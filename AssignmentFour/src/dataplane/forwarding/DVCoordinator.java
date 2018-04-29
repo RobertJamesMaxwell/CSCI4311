@@ -182,11 +182,16 @@ public class DVCoordinator {
                 allNodesAsPortUsers.add(nodeAsPortUser);
             }
 
-            System.out.println("\nDVCoordinator will begin sending random packets in one minute...");
-            Thread.sleep( 60 * 1000);
+            System.out.println("\nDVCoordinator will begin sending random packets in 10 seconds...");
+            System.out.println("Countdown:");
+            for (int i = 10; i > 0; i--) {
+                System.out.println(i);
+                Thread.sleep(1000);
+            }
+            //Thread.sleep( 60 * 1000);
 
             //send random messages
-            for (int i = 0; i < 2; i++)    {
+            for (int i = 0; i < 500; i++)    {
 
                 //pick a random node as a source and destination
                 System.out.println("\nSending message number: " + i);
@@ -200,8 +205,8 @@ public class DVCoordinator {
                 MessageType msg = new MessageType(sourceNode, destinationNode, pack);
                 allNodesAsPortUsers.get(sourceNode).send(msg);
                 //sourcePortUser.close();
-                System.out.println("Sleeping for 30 seconds before sending another packet...");
-                Thread.sleep(30000);
+                System.out.println("Sleeping for 90 ms before sending another packet...");
+                Thread.sleep(90);
             }
 
             //close all connections
