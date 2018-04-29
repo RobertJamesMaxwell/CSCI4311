@@ -50,13 +50,55 @@ public class DVReceiver extends Thread {
                 System.out.println();
                 this.changeListener.changed();
                 ControlPlane.needToChange = true;
-                System.out.println("\nDVReceiver Thread is sleeping for 12 ms.");
-                Thread.sleep(12);
+                boolean dvAlgorithmUpdate = false;
+
+                //update your forwarding table and DV
+                for (int i = 0; i < ControlPlane.realForwardingTable.size(); i++)    {
+                    if (ControlPlane.nodeFromCoordinator.dv[receivedDV.node_num] + receivedDV.dv[i] < ControlPlane.nodeFromCoordinator.dv[i]
+                            && ControlPlane.nodeFromCoordinator.dv[i] != 0
+                            && receivedDV.dv[i] != 0
+                            //&& nodeFromCoordinator.dv[i] != Integer.MAX_VALUE
+                            && receivedDV.dv[i] != Integer.MAX_VALUE){
+
+                        ControlPlane.realForwardingTable.put(i, receivedDV.node_num);
+
+                        System.out.println("\n\nMy DV is: ");
+                        for(int j: ControlPlane.nodeFromCoordinator.dv) {
+                            System.out.print(j + " ");
+                        }
+
+                        System.out.println("\nDV I just received from node '" + receivedDV.node_num + "' is:");
+                        for(int j: receivedDV.dv) {
+                            System.out.print(j + " ");
+                        }
+
+                        //update nodeFromCoordinator.dv
+                        ControlPlane.nodeFromCoordinator.dv[i] = receivedDV.dv[i] + ControlPlane.nodeFromCoordinator.dv[receivedDV.node_num];
+                        System.out.println("\nMy NEW DV is: ");
+                        for(int j: ControlPlane.nodeFromCoordinator.dv) {
+                            System.out.print(j + " ");
+                        }
+                        System.out.println();
+                        dvAlgorithmUpdate = true;
+
+                    }
+                }
+                System.out.println("\nMy NEW Real Forwarding Table is: " + ControlPlane.realForwardingTable);
+                if (dvAlgorithmUpdate)   {
+                    System.out.println("Sending update to neighbors.");
+                    DV dvToSendOverNetwork = new DV(ControlPlane.nodeFromCoordinator.nodeNum);
+                    dvToSendOverNetwork.setDv(ControlPlane.nodeFromCoordinator.dv);
+                    ControlPlane.dvSender.send(dvToSendOverNetwork);
+                }
+
+
+//                System.out.println("\nDVReceiver Thread is sleeping for 12 ms.");
+//                Thread.sleep(12);
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
         }
 
     }
