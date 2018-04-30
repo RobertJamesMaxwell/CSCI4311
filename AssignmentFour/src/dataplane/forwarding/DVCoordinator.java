@@ -60,7 +60,7 @@ public class DVCoordinator {
         System.out.println("\nYou have successfully created the following DV nodes.\n");
         for (DVNode node : dvNodes) {
             System.out.println("\n\nNode number: " + node.nodeNum);
-            System.out.println("With dv's: ");
+            System.out.print("With dv's: ");
             for(int i: node.dv) {
                 System.out.print(i + " ");
             }
@@ -168,11 +168,11 @@ public class DVCoordinator {
         System.out.println("\n---------------------------------");
         System.out.println("-----------------------------------");
         System.out.println("-----------------------------------");
-        System.out.println("DVCoordinator will connect to all nodes in 10 seconds...");
+        System.out.println("DVCoordinator will connect to all nodes in 20 seconds...");
         try {
-            Thread.sleep(10000);
+            Thread.sleep(20 * 1000);
 
-            //setup connection to all FWNodes
+            //setup connection to all Control Planes
             List<PortUser> allNodesAsPortUsers = new ArrayList<>();
             for (int i = 0 ; i < dvNodes.size(); i++ ) {
                 String nodeIP = tableForDVNodeIPMapping.get(i).replace("/", "");
@@ -182,8 +182,12 @@ public class DVCoordinator {
                 allNodesAsPortUsers.add(nodeAsPortUser);
             }
 
-            System.out.println("\nDVCoordinator will begin sending random packets in one minute...");
-            Thread.sleep( 60 * 1000);
+            int countdownSeconds = 60;
+            System.out.println("\nDVCoordinator will begin sending random packets in " + countdownSeconds + " seconds.");
+            for (int i = countdownSeconds; i > 0; i--){
+                System.out.println(i);
+                Thread.sleep(1000);
+            }
 
             //send random messages
             for (int i = 0; i < 2; i++)    {
@@ -204,13 +208,11 @@ public class DVCoordinator {
                 Thread.sleep(30000);
             }
 
-            //close all connections
-            for(PortUser portUser: allNodesAsPortUsers) {
-              //  portUser.close();
-            }
+
+            // don't shut network down
             while(true) {
                 System.out.println("WAITING...");
-                Thread.sleep(10000);
+                Thread.sleep(30 * 1000);
             }
 
         } catch (InterruptedException e) {
