@@ -1,7 +1,7 @@
 /*
  * CSCI 4311
  * Assignment 4 - DV Algorithm
- * Robert Maxwell
+ * Robert Maxwell, Chris Schilling
  * Spring 2018
  */
 

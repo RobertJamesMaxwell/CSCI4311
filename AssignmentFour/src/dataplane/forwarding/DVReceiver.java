@@ -41,7 +41,6 @@ public class DVReceiver extends Thread {
                     System.out.print(j + " ");
                 }
                 System.out.println();
-                ControlPlane.needToChange = true;
                 boolean dvAlgorithmUpdate = false;
 
                 //update Control Plane's DV object and forwarding table

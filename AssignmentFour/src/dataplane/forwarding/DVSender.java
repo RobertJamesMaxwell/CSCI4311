@@ -1,7 +1,7 @@
 /*
  * CSCI 4311
- * Assignment 2 - Exchanging Distance Vector with Neighbors
- * Robert Maxwell
+ * Assignment 4 - DV Algorithm
+ * Robert Maxwell, Chris Schilling
  * Spring 2018
  */
 
@@ -26,34 +26,8 @@ public class DVSender {
         }
     }
 
-    public DVSender(int multicastPortNumber, String multicastIPNumber)   {
-        try {
-            this.senderSocket = new MulticastSocket();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        this.multicastPortNumber = multicastPortNumber;
-        this.multicastIPNumber = multicastIPNumber;
-    }
-
-    public MulticastSocket getSenderSocket() {
-        return senderSocket;
-    }
-
-    public void setSenderSocket(MulticastSocket senderSocket) {
-        this.senderSocket = senderSocket;
-    }
-
-    public int getMulticastPortNumber() {
-        return multicastPortNumber;
-    }
-
     public void setMulticastPortNumber(int multicastPortNumber) {
         this.multicastPortNumber = multicastPortNumber;
-    }
-
-    public String getMulticastIPNumber() {
-        return multicastIPNumber;
     }
 
     public void setMulticastIPNumber(String multicastIPNumber) {
@@ -61,7 +35,6 @@ public class DVSender {
     }
 
     public void send(DV dvToSendOverNetwork){
-
         byte[] buffer = dvToSendOverNetwork.getBytes();
         try {
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(this.multicastIPNumber), this.multicastPortNumber);

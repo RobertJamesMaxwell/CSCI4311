@@ -67,28 +67,12 @@ public class DataPlanePort implements Runnable, Callback {
 	} 
 	
 	public synchronized MessageType receive() throws InterruptedException{
-		System.out.println("Inside of DPP receive...");
 		while (que.isEmpty()) {
-			System.out.println("Que is empty...");
-			wait(); 
+			wait();
 		}
-		System.out.println("Before polling...");
 		MessageType msg = que.poll();
-		System.out.println("After polling...");
 		System.out.println("receive: " + msg.getDestNode());
 		return msg; 
-	} 
-	
-	public int getPortNum() {
-		return portNum;
-	}
-
-	public synchronized void setPortNum(int portNum) {
-		this.portNum = portNum;
-	}
-
-	public int getnSize() {
-		return nNeighbor;
 	}
 
 	public ConcurrentLinkedQueue<MessageType> getQue() {

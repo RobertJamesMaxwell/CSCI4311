@@ -1,3 +1,10 @@
+/*
+ * CSCI 4311
+ * Assignment 4 - DV Algorithm
+ * Robert Maxwell, Chris Schilling
+ * Spring 2018
+ */
+
 package dataplane.forwarding;
 
 import java.io.ByteArrayInputStream;
@@ -15,7 +22,7 @@ public class ControlPlane {
     private static List<PortUser> portUserList = new ArrayList<>();
     private static List<HashMap<Integer, Integer>> entireForwardingTable = new ArrayList<>();
     private static int dvNodePortNumber;
-    public static boolean needToChange = false;
+    //public static boolean needToChange = false;
     public static DVNode nodeFromCoordinator;
     public static HashMap<Integer, Integer> realForwardingTable = new HashMap<>();
     public static DVSender dvSender;

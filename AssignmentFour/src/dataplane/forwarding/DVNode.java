@@ -1,7 +1,7 @@
 /*
  * CSCI 4311
- * Assignment 2 - Exchanging Distance Vector with Neighbors
- * Robert Maxwell
+ * Assignment 4 - DV Algorithm
+ * Robert Maxwell, Chris Schilling
  * Spring 2018
  */
 
