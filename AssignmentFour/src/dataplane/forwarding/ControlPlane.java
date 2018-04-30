@@ -9,11 +9,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class ControlPlane implements ChangeListener {
+public class ControlPlane {
 
     private static DataPlanePort dataPlanePort;
     private static List<PortUser> portUserList = new ArrayList<>();
-    private DVNode dvNode;
     private static List<HashMap<Integer, Integer>> entireForwardingTable = new ArrayList<>();
     private static int dvNodePortNumber;
     public static boolean needToChange = false;
@@ -132,8 +131,7 @@ public class ControlPlane implements ChangeListener {
                 }
             }
 
-            ChangeListener myControlPlane = new ControlPlane();
-            DVReceiver dvReceiver = new DVReceiver(socketForListening, myControlPlane);
+            DVReceiver dvReceiver = new DVReceiver(socketForListening);
             //dvReceiver.setSocketsForListening(socketsForListening);
 
             dvReceiver.start();
