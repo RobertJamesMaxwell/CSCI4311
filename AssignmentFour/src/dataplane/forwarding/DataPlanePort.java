@@ -71,7 +71,7 @@ public class DataPlanePort implements Runnable, Callback {
 			wait();
 		}
 		MessageType msg = que.poll();
-		System.out.println("receive: " + msg.getDestNode());
+		//System.out.println("receive: " + msg.getDestNode());
 		return msg; 
 	}
 
@@ -115,7 +115,7 @@ class Listner extends Thread {
 		while (msgSize != -1) { 
 			try { 
 				msgSize = in.read(packet); 
-				System.out.println("Listner " + pId + ": " + msgSize + " bytes."); 
+				//System.out.println("Listner " + pId + ": " + msgSize + " bytes.");
 				MessageType msg = MessageType.bytearray2messagetype(packet); 				
 				requester.callback(msg); 
 			} catch (SocketException se) { 

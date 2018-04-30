@@ -45,6 +45,43 @@ public class DVReceiver extends Thread {
 
                 //update Control Plane's DV object and forwarding table
                 for (int i = 0; i < ControlPlane.realForwardingTable.size(); i++)    {
+
+                    // if your direct neighbor sends you a new dv, update it no matter what if you're using it
+                    if (!ControlPlane.neighborNodesIPList.get(i).equals("")
+                            && i == receivedDV.node_num
+                            && receivedDV.node_num == ControlPlane.realForwardingTable.get(receivedDV.node_num)
+                            && receivedDV.dv[ControlPlane.nodeFromCoordinator.nodeNum] != ControlPlane.nodeFromCoordinator.dv[i])  {
+
+                        //update forwarding table
+                        System.out.println("\nMy OLD Forwarding Table is: " + ControlPlane.realForwardingTable);
+                        System.out.println("Updating forwarding table at index " + i + " with " + receivedDV.node_num);
+                        ControlPlane.realForwardingTable.put(i, receivedDV.node_num);
+                        System.out.println("My NEW Forwarding Table is: " + ControlPlane.realForwardingTable);
+
+                        //update nodeFromCoordinator.dv
+                        System.out.println("Received a new DV from a direct neighbor.");
+                        System.out.println("\nMy OLD DV is: ");
+                        for(int j: ControlPlane.nodeFromCoordinator.dv) {
+                            System.out.print(j + " ");
+                        }
+                        System.out.println("\nDV I just received from node '" + receivedDV.node_num + "' is:");
+                        for(int j: receivedDV.dv) {
+                            System.out.print(j + " ");
+                        }
+                        ControlPlane.nodeFromCoordinator.dv[i] = receivedDV.dv[ControlPlane.nodeFromCoordinator.nodeNum];
+                        System.out.println("\nMy NEW DV is: ");
+                        for(int j: ControlPlane.nodeFromCoordinator.dv) {
+                            System.out.print(j + " ");
+                        }
+                        System.out.println();
+
+                        dvAlgorithmUpdate = true;
+                        //Thread.sleep(60 * 1000);
+
+                    }
+
+
+                    // update according to DV algorithm
                     if (ControlPlane.nodeFromCoordinator.dv[receivedDV.node_num] + receivedDV.dv[i] < ControlPlane.nodeFromCoordinator.dv[i]
                             && ControlPlane.nodeFromCoordinator.dv[i] != 0
                             && receivedDV.dv[i] != 0
@@ -52,6 +89,7 @@ public class DVReceiver extends Thread {
 
                         //update forwarding table
                         System.out.println("\nMy OLD Forwarding Table is: " + ControlPlane.realForwardingTable);
+                        System.out.println("Updating forwarding table at index " + i + " with " + receivedDV.node_num);
                         ControlPlane.realForwardingTable.put(i, receivedDV.node_num);
                         System.out.println("My NEW Forwarding Table is: " + ControlPlane.realForwardingTable);
 
@@ -84,6 +122,8 @@ public class DVReceiver extends Thread {
             }
         } catch (IOException e) {
             e.printStackTrace();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
         }
     }
 }

@@ -24,6 +24,7 @@ public class ControlPlane {
     public static DVNode nodeFromCoordinator;
     public static HashMap<Integer, Integer> realForwardingTable = new HashMap<>();
     public static DVSender dvSender;
+    public static List<String> neighborNodesIPList;
 
     public static void main(String[] args) {
 
@@ -62,7 +63,7 @@ public class ControlPlane {
             buf = packet.getData();
             bais = new ByteArrayInputStream(buf);
             ois = new ObjectInputStream(bais);
-            List<String> neighborNodesIPList = (List<String>) ois.readObject();
+            neighborNodesIPList = (List<String>) ois.readObject();
             System.out.println("\n\nReceived the following IP neighbor mapping from server!");
             System.out.println(neighborNodesIPList);
 
@@ -179,17 +180,26 @@ public class ControlPlane {
             // get this node's forwarding table
             HashMap<Integer, Integer> myForwardingTable = realForwardingTable;
 
-            // listen for incoming connections
+            int numberOfMessagesReceived = 0;
+            long startTimeOfReceivedMessages = System.currentTimeMillis();
+            long endTimeOfReceivedMessage = 0;
+            System.out.println("\nListening for a message...");
             while (true) {
-                System.out.println("\nListening for a message...");
-                MessageType receivedMessage = dataPlanePort.receive();
-                int destinationNode = receivedMessage.getDestNode();
-                System.out.println("Recieved a new message from source node: " + receivedMessage.getSourceNode() + " for destination node: " + destinationNode);
 
+                // listen for incoming connections
+                MessageType receivedMessage = dataPlanePort.receive();
+                endTimeOfReceivedMessage = System.currentTimeMillis();
+                numberOfMessagesReceived++;
+                int destinationNode = receivedMessage.getDestNode();
+                System.out.println("\n\nRecieved a new message from source node: " + receivedMessage.getSourceNode() + " for destination node: " + destinationNode);
+
+                // accept message if it's for you
                 if (destinationNode == nodeFromCoordinator.nodeNum) {
                     System.out.println("WOOHOO! The packet got to where it needed to get!");
-                } else {
-                    //forward packet according to forwarding table
+                }
+
+                // forward message according to forwarding table
+                else {
                     int nodeToForwardTo = myForwardingTable.get(destinationNode);
                     System.out.println("Sending to next node: " + nodeToForwardTo + " a packet for destination node: " + destinationNode);
                     byte[] pack = new byte[1024];
@@ -202,8 +212,51 @@ public class ControlPlane {
                             portUser.send(msg);
                         }
                     }
-                    Thread.sleep(1000);
+                    //Thread.sleep(1000);
                 }
+
+                // calculate rate, update dv every 10 seconds
+                long secondsBetweenStartAndEnd = (endTimeOfReceivedMessage - startTimeOfReceivedMessages) / 1000;
+                if (secondsBetweenStartAndEnd > 10) {
+                    System.out.println("It's been at least 10 seconds since last change.");
+                    System.out.println("Received " + numberOfMessagesReceived + " message in " + secondsBetweenStartAndEnd + " seconds.");
+                    double rate = 1 + (double) numberOfMessagesReceived / (double) secondsBetweenStartAndEnd;
+                    System.out.println("Rate is: " + rate);
+
+                    boolean needToSendUpdate = false;
+                    //set new weight for neighbors
+                    for (int i = 0; i < neighborNodesIPList.size(); i++){
+                        if (!neighborNodesIPList.get(i).equals("")
+                                && realForwardingTable.get(i) == i)  {
+                            int newWeight = (int) Math.round(nodeFromCoordinator.dv[i] * rate);
+                            if (newWeight != nodeFromCoordinator.dv[i]) {
+                                System.out.println("\nRATE CHANGE - My OLD DV is: ");
+                                for(int j: ControlPlane.nodeFromCoordinator.dv) {
+                                    System.out.print(j + " ");
+                                }
+                                nodeFromCoordinator.dv[i] = newWeight;
+                                System.out.println("\nRATE CHANGE - My NEW DV is: ");
+                                for(int j: ControlPlane.nodeFromCoordinator.dv) {
+                                    System.out.print(j + " ");
+                                }
+                                System.out.println();
+                                needToSendUpdate = true;
+                            }
+                        }
+                    }
+
+                    //send out your new DV
+                    if (needToSendUpdate) {
+                        dvSender.send(dvToSendOverNetwork);
+                        System.out.println("PAUSE");
+                        Thread.sleep(100 * 60 * 1000);
+                    }
+
+                    //reset variables
+                    numberOfMessagesReceived = 0;
+                    startTimeOfReceivedMessages = System.currentTimeMillis();
+                }
+
             }
 
         } catch (UnknownHostException e) {
